@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clan Rankings - Ninja Rift</title>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom scrollbar */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+
+        /* Darker even rows */
+        .table-row-even {
+            background-color: #2d3748; /* Darker gray */
+        }
+        .table-row-odd {
+            background-color: #1a202c; /* Lighter gray */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-6 text-blue-400">Ninja Rift Clan Rankings</h1>
+        <div class="table-container overflow-x-auto rounded-lg shadow-lg">
+            <table class="min-w-full bg-gray-800">
+                <thead class="bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rank</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Clan Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Reputation</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">RPS</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">RPM</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Members</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tokens</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Golds</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Leader</th>
+                    </tr>
+                </thead>
+                <tbody id="clan-table-body" class="divide-y divide-gray-700">
+                    <!-- Rows will be populated here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://playninjarift.com/api/clan_ranking_website.php";
+
+        // Store previous clan data for comparison
+        let previousClanData = [];
+        let reputationChanges = {}; // Stores reputation changes over time
+
+        // Fetch clan data and update the table
+        async function fetchClanData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+
+                // Sort clans by clan_reputation in descending order
+                const sortedClans = data.sort((a, b) => b.clan_reputation - a.clan_reputation);
+
+                // Clear existing table rows
+                const tableBody = document.getElementById("clan-table-body");
+                tableBody.innerHTML = "";
+
+                // Calculate reputation changes
+                const currentTime = Date.now();
+                sortedClans.forEach((clan) => {
+                    const clanId = clan.clan_id;
+                    const currentReputation = clan.clan_reputation;
+
+                    // Initialize reputation change tracking if not already present
+                    if (!reputationChanges[clanId]) {
+                        reputationChanges[clanId] = {
+                            timestamps: [],
+                            reputations: [],
+                        };
+                    }
+
+                    // Add current reputation and timestamp
+                    reputationChanges[clanId].timestamps.push(currentTime);
+                    reputationChanges[clanId].reputations.push(currentReputation);
+
+                    // Remove data older than 1 minute
+                    const oneMinuteAgo = currentTime - 60000; // 60 seconds * 1000 ms
+                    reputationChanges[clanId].timestamps = reputationChanges[clanId].timestamps.filter(
+                        (timestamp) => timestamp >= oneMinuteAgo
+                    );
+                    reputationChanges[clanId].reputations = reputationChanges[clanId].reputations.filter(
+                        (_, index) => reputationChanges[clanId].timestamps[index] >= oneMinuteAgo
+                    );
+                });
+
+                // Populate the table with sorted data
+                sortedClans.forEach((clan, index) => {
+                    const clanId = clan.clan_id;
+                    const currentReputation = clan.clan_reputation;
+
+                    // Calculate RPS (Reputation Per Second)
+                    const previousReputation = previousClanData.find((c) => c.clan_id === clanId)?.clan_reputation || currentReputation;
+                    const rps = currentReputation - previousReputation;
+
+                    // Calculate RPM (Reputation Per Minute)
+                    const rpmData = reputationChanges[clanId];
+                    const rpm = rpmData.reputations.length > 1
+                        ? rpmData.reputations[rpmData.reputations.length - 1] - rpmData.reputations[0]
+                        : 0;
+
+                    const row = document.createElement("tr");
+                    row.classList.add(index % 2 === 0 ? "table-row-odd" : "table-row-even", "hover:bg-gray-750");
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${index + 1}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-400">${clan.clan_name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${currentReputation.toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${rps.toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${rpm.toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${clan.clan_members}/${clan.clan_max_members}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${clan.clan_tokens.toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${clan.clan_golds.toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${clan.character_name}</td>
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+
+                // Update previous clan data
+                previousClanData = sortedClans;
+            } catch (error) {
+                console.error("Error fetching clan data:", error);
+            }
+        }
+
+        // Fetch data every second
+        setInterval(fetchClanData, 1000);
+
+        // Initial fetch
+        fetchClanData();
+    </script>
+</body>
+</html>
