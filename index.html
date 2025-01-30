@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ninja Rift Rankings Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .village-button {
+            transition: all 0.3s ease;
+        }
+
+        .village-button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center mb-8 text-blue-400">
+            Ninja Rift Rankings
+            <div class="text-xl mt-2 text-gray-400">Choose Your Path</div>
+        </h1>
+
+        <div class="max-w-2xl mx-auto mb-12">
+            <div class="grid gap-4 md:grid-cols-2">
+                <button onclick="window.location.href='/clan-ranking.html'"
+                    class="village-button bg-gray-800 p-6 rounded-lg hover:bg-gray-700 flex items-center justify-center">
+                    <div>
+                        <div class="text-xl font-bold text-blue-400">Clan Rankings</div>
+                        <div class="text-sm text-gray-400 mt-1">Top Ninja Clans</div>
+                    </div>
+                </button>
+
+                <button onclick="window.location.href='/arena-ranking.html'"
+                    class="village-button bg-gray-800 p-6 rounded-lg hover:bg-gray-700 flex items-center justify-center">
+                    <div>
+                        <div class="text-xl font-bold text-red-400">Arena Rankings</div>
+                        <div class="text-sm text-gray-400 mt-1">Battle Champions</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-2xl font-bold text-center mb-6 text-blue-400">Choose Your Village</h2>
+            <div class="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+                <button onclick="window.location.href='/arena-ranking.html?village_id=1'"
+                    class="village-button bg-gray-800 p-4 rounded-lg hover:bg-gray-700">
+                    <div class="text-blue-400 font-bold">Wind Village</div>
+                    <div class="text-sm text-gray-400">(Village ID: 1)</div>
+                </button>
+
+                <button onclick="window.location.href='/arena-ranking.html?village_id=2'"
+                    class="village-button bg-gray-800 p-4 rounded-lg hover:bg-gray-700">
+                    <div class="text-red-400 font-bold">Fire Village</div>
+                    <div class="text-sm text-gray-400">(Village ID: 2)</div>
+                </button>
+
+                <button onclick="window.location.href='/arena-ranking.html?village_id=3'"
+                    class="village-button bg-gray-800 p-4 rounded-lg hover:bg-gray-700">
+                    <div class="text-yellow-400 font-bold">Lightning Village</div>
+                    <div class="text-sm text-gray-400">(Village ID: 3)</div>
+                </button>
+
+                <button onclick="window.location.href='/arena-ranking.html?village_id=4'"
+                    class="village-button bg-gray-800 p-4 rounded-lg hover:bg-gray-700">
+                    <div class="text-green-400 font-bold">Earth Village</div>
+                    <div class="text-sm text-gray-400">(Village ID: 4)</div>
+                </button>
+
+                <button onclick="window.location.href='/arena-ranking.html?village_id=5'"
+                    class="village-button bg-gray-800 p-4 rounded-lg hover:bg-gray-700">
+                    <div class="text-cyan-400 font-bold">Water Village</div>
+                    <div class="text-sm text-gray-400">(Village ID: 5)</div>
+                </button>
+            </div>
+        </div>
+
+        <div class="text-center mt-12 text-gray-400 text-sm">
+            <p>Ninja Rift Rankings System - Choose your village wisely!</p>
+            <p class="mt-2">Data updates every 60 seconds</p>
+        </div>
+    </div>
+</body>
+
+</html>
