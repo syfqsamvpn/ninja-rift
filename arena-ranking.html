@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Rankings - Ninja Rift</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+
+        .table-row-even {
+            background-color: #2d3748; /* Darker gray */
+        }
+        .table-row-odd {
+            background-color: #1a202c; /* Lighter gray */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-6 text-blue-400" id="village-name">Arena Rankings</h1>
+        <div class="table-container overflow-x-auto rounded-lg shadow-lg">
+            <table class="min-w-full bg-gray-800">
+                <thead class="bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rank</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Character Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Trophies</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">TPS</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">TPM</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Level</th>
+                    </tr>
+                </thead>
+                <tbody id="arena-table-body" class="divide-y divide-gray-700">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "https://playninjarift.com/api/detail_village_website.php";
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const villageId = urlParams.get("village_id") || 1; // Default to village_id=1 if not provided
+
+        let previousArenaData = [];
+        let trophiesChanges = {};
+
+        async function fetchArenaData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}?village_id=${villageId}`);
+                const data = await response.json();
+
+                document.getElementById("village-name").textContent = `${data.village_name} Arena Rankings`;
+
+                const sortedMembers = data.members.sort((a, b) => b.trophies - a.trophies);
+
+                const tableBody = document.getElementById("arena-table-body");
+                tableBody.innerHTML = "";
+
+                const currentTime = Date.now();
+                sortedMembers.forEach((member) => {
+                    const characterName = member.character_name;
+                    const currentTrophies = member.trophies;
+
+                    if (!trophiesChanges[characterName]) {
+                        trophiesChanges[characterName] = {
+                            timestamps: [],
+                            trophies: [],
+                        };
+                    }
+
+                    // Add current trophies and timestamp
+                    trophiesChanges[characterName].timestamps.push(currentTime);
+                    trophiesChanges[characterName].trophies.push(currentTrophies);
+
+                    const oneMinuteAgo = currentTime - 60000; // 60 seconds * 1000 ms
+                    trophiesChanges[characterName].timestamps = trophiesChanges[characterName].timestamps.filter(
+                        (timestamp) => timestamp >= oneMinuteAgo
+                    );
+                    trophiesChanges[characterName].trophies = trophiesChanges[characterName].trophies.filter(
+                        (_, index) => trophiesChanges[characterName].timestamps[index] >= oneMinuteAgo
+                    );
+                });
+
+                sortedMembers.forEach((member, index) => {
+                    const characterName = member.character_name;
+                    const currentTrophies = member.trophies;
+
+                    const previousTrophies = previousArenaData.find((m) => m.character_name === characterName)?.trophies || currentTrophies;
+                    const tps = currentTrophies - previousTrophies;
+
+                    const tpmData = trophiesChanges[characterName];
+                    const tpm = tpmData.trophies.length > 1
+                        ? tpmData.trophies[tpmData.trophies.length - 1] - tpmData.trophies[0]
+                        : 0;
+
+                    const row = document.createElement("tr");
+                    row.classList.add(index % 2 === 0 ? "table-row-odd" : "table-row-even", "hover:bg-gray-750");
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${index + 1}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-400">${characterName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${currentTrophies.toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${tps.toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${tpm.toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${member.character_level}</td>
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+
+                previousArenaData = sortedMembers;
+            } catch (error) {
+                console.error("Error fetching arena data:", error);
+            }
+        }
+
+        setInterval(fetchArenaData, 1000);
+
+        fetchArenaData();
+    </script>
+</body>
+</html>
